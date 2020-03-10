@@ -1,27 +1,22 @@
 import React, {useState} from 'react';
-import {Modal, View, StyleSheet, Button, TextInput} from 'react-native';
+import {View, StyleSheet, Button, TextInput} from 'react-native';
 
 const TaskInput = props => {
   const [enteredTaskTitle, setEnteredTaskTitle] = useState();
   const [textInputBorderColor, setTextInputBorderColor] = useState('black');
 
   const addButtonHandler = () => {
-    if (enteredTaskTitle === '') {
-      setTextInputBorderColor('red');
+    if (enteredTaskTitle) {
+      const addHandler = props.navigation.getParam('addButtonPressed');
+      addHandler(enteredTaskTitle);
+      closeScreen();
     } else {
-      props.addButtonPressed(enteredTaskTitle);
-      onModalClose();
+      setTextInputBorderColor('red');
     }
   };
 
-  const cancelButtonHandler = () => {
-    props.cancelButtonPressed();
-    onModalClose();
-  };
-
-  const onModalClose = () => {
-    setEnteredTaskTitle('');
-    setTextInputBorderColor('black');
+  const closeScreen = () => {
+    props.navigation.goBack();
   };
 
   const inputStyle = () => {
@@ -35,24 +30,24 @@ const TaskInput = props => {
   };
 
   return (
-    <Modal visible={props.isAppear} animationType={'slide'}>
-      <View style={styles.containerStyle}>
-        <View>
-          <TextInput
-            value={enteredTaskTitle}
-            style={inputStyle()}
-            placeholder={'Add task title...'}
-            onChangeText={text => setEnteredTaskTitle(text)}
-          />
-        </View>
-        <View style={styles.addButtonStyle}>
-          <Button title={'Add'} onPress={addButtonHandler} />
-        </View>
-        <View style={styles.addButtonStyle}>
-          <Button title={'Cancel'} onPress={cancelButtonHandler} />
-        </View>
+    //<Modal visible={props.isAppear} animationType={'slide'}>
+    <View style={styles.containerStyle}>
+      <View>
+        <TextInput
+          value={enteredTaskTitle}
+          style={inputStyle()}
+          placeholder={'Add task title...'}
+          onChangeText={text => setEnteredTaskTitle(text)}
+        />
       </View>
-    </Modal>
+      <View style={styles.addButtonStyle}>
+        <Button title={'Add'} onPress={addButtonHandler} />
+      </View>
+      <View style={styles.addButtonStyle}>
+        <Button title={'Cancel'} onPress={closeScreen} />
+      </View>
+    </View>
+    //</Modal>
   );
 };
 
