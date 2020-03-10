@@ -5,11 +5,23 @@ import TaskItem from './TaskItem';
 function TaskList({navigation}) {
   const [tasks, setTasks] = useState([]);
 
-  const addTaskHandler = taskTitle => {
+  const addTaskHandler = newTask => {
     setTasks(currentTasks => [
       ...currentTasks,
-      {id: Math.random().toString(), title: taskTitle},
+      {id: newTask.id, title: newTask.title},
     ]);
+  };
+
+  const editTaskHandler = newTask => {
+    let newArr = [...tasks];
+    for (var i in newArr) {
+      if (newArr[i].id === newTask.id) {
+        newArr[i].title = newTask.title;
+        break;
+      }
+    }
+
+    setTasks(newArr);
   };
 
   const deleteItemHandler = id => {
@@ -18,9 +30,20 @@ function TaskList({navigation}) {
     });
   };
 
+  const clickItemHandler = tempTask => {
+    navigation.navigate('TaskDetails', {
+      addButtonPressed: editTaskHandler,
+      deleteButtonPressed: deleteItemHandler,
+      isDeleteButtonVisible: true,
+      title: tempTask.title,
+      id: tempTask.id,
+    });
+  };
+
   const openAddScreenHandler = () => {
     navigation.navigate('TaskDetails', {
       addButtonPressed: addTaskHandler,
+      id: -1,
     });
   };
 
@@ -33,7 +56,7 @@ function TaskList({navigation}) {
           <TaskItem
             id={item.id}
             title={item.title}
-            onDelete={deleteItemHandler}
+            onClickItem={clickItemHandler}
           />
         )}
         keyExtractor={item => item.id}

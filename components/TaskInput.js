@@ -1,14 +1,27 @@
 import React, {useState} from 'react';
-import {View, StyleSheet, Button, TextInput} from 'react-native';
+import {View, StyleSheet, Button, TextInput, Modal} from 'react-native';
 
 const TaskInput = props => {
-  const [enteredTaskTitle, setEnteredTaskTitle] = useState();
+  const [enteredTaskTitle, setEnteredTaskTitle] = useState(
+    props.navigation.getParam('title'),
+  );
   const [textInputBorderColor, setTextInputBorderColor] = useState('black');
-
+  const [deleteButtonVisible, setDeleteButtonVisible] = useState(
+    props.navigation.getParam('isDeleteButtonVisible'),
+  );
   const addButtonHandler = () => {
     if (enteredTaskTitle) {
       const addHandler = props.navigation.getParam('addButtonPressed');
-      addHandler(enteredTaskTitle);
+
+      if (props.navigation.getParam('id') === -1) {
+        addHandler({id: Math.random().toString(), title: enteredTaskTitle});
+      } else {
+        addHandler({
+          id: props.navigation.getParam('id'),
+          title: enteredTaskTitle,
+        });
+      }
+
       closeScreen();
     } else {
       setTextInputBorderColor('red');
@@ -16,6 +29,12 @@ const TaskInput = props => {
   };
 
   const closeScreen = () => {
+    props.navigation.goBack();
+  };
+
+  const deleteTask = () => {
+    const deleteFunc = props.navigation.getParam('deleteButtonPressed');
+    deleteFunc(props.navigation.getParam('id'));
     props.navigation.goBack();
   };
 
@@ -30,7 +49,6 @@ const TaskInput = props => {
   };
 
   return (
-    //<Modal visible={props.isAppear} animationType={'slide'}>
     <View style={styles.containerStyle}>
       <View>
         <TextInput
@@ -41,13 +59,17 @@ const TaskInput = props => {
         />
       </View>
       <View style={styles.addButtonStyle}>
-        <Button title={'Add'} onPress={addButtonHandler} />
+        <Button title={'Save'} onPress={addButtonHandler} />
       </View>
       <View style={styles.addButtonStyle}>
         <Button title={'Cancel'} onPress={closeScreen} />
       </View>
+      {deleteButtonVisible ? (
+        <View style={styles.addButtonStyle}>
+          <Button title={'Delete'} onPress={deleteTask} />
+        </View>
+      ) : null}
     </View>
-    //</Modal>
   );
 };
 
