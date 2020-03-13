@@ -21,7 +21,7 @@ const TaskItem = props => {
     if (!checked) {
       setLine('line-through');
     } else {
-      setLine('initial');
+      setLine('none');
     }
   };
 
@@ -30,7 +30,11 @@ const TaskItem = props => {
       onPress={() => props.onClickItem({id: props.id, title: props.title})}>
       <View style={styles.listItem}>
         <View
-          style={{flex: 1, flexDirection: 'row', alignContent: 'flex-start'}}>
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            alignContent: 'flex-start',
+          }}>
           <Text style={textStyle()}>{props.title}</Text>
         </View>
         <View style={{flexDirection: 'column', alignSelf: 'auto'}}>

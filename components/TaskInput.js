@@ -14,7 +14,10 @@ const TaskInput = props => {
       const addHandler = props.navigation.getParam('addButtonPressed');
 
       if (props.navigation.getParam('id') === -1) {
-        addHandler({id: Math.random().toString(), title: enteredTaskTitle});
+        addHandler({
+          id: Math.floor(Math.random() * 10000) + 1,
+          title: enteredTaskTitle,
+        });
       } else {
         addHandler({
           id: props.navigation.getParam('id'),
@@ -41,7 +44,7 @@ const TaskInput = props => {
   const inputStyle = () => {
     return {
       borderColor: textInputBorderColor,
-      width: '80%',
+      width: 300,
       borderWidth: 1,
       padding: 10,
       marginBottom: 10,
@@ -52,6 +55,7 @@ const TaskInput = props => {
     <View style={styles.containerStyle}>
       <View>
         <TextInput
+          multiline
           value={enteredTaskTitle}
           style={inputStyle()}
           placeholder={'Add task title...'}
