@@ -135,7 +135,7 @@ function TaskList({navigation}) {
         data={tasks}
         renderItem={({item}) => (
           <TaskItem
-            id={item.id.toString()}
+            id={item.id}
             title={item.title}
             onClickItem={clickItemHandler}
           />
