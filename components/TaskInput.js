@@ -9,6 +9,7 @@ const TaskInput = props => {
   const [deleteButtonVisible, setDeleteButtonVisible] = useState(
     props.navigation.getParam('isDeleteButtonVisible'),
   );
+
   const addButtonHandler = () => {
     if (enteredTaskTitle) {
       const addHandler = props.navigation.getParam('addButtonPressed');

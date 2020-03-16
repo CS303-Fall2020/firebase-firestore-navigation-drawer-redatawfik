@@ -3,14 +3,13 @@ import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 
 const TaskItem = props => {
-  const [checked, setChecked] = useState(false);
-  const [line, setLine] = useState('none');
+  const [checked, setChecked] = useState(props.done);
 
   const textStyle = () => {
     return {
       textAlign: 'center',
       fontSize: 20,
-      textDecorationLine: line,
+      textDecorationLine: props.done ? 'line-through' : 'none',
       textDecorationStyle: 'solid',
       fontWeight: 'normal',
     };
@@ -19,9 +18,9 @@ const TaskItem = props => {
   const stateChangeHandler = () => {
     setChecked(!checked);
     if (!checked) {
-      setLine('line-through');
+      props.onStateChange({id: props.id, title: props.title, done: true});
     } else {
-      setLine('none');
+      props.onStateChange({id: props.id, title: props.title, done: false});
     }
   };
 
