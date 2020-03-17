@@ -1,5 +1,12 @@
 import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Button,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 
 const TaskItem = props => {
@@ -15,6 +22,8 @@ const TaskItem = props => {
     };
   };
 
+  const onDeleteClick = () => {};
+
   const stateChangeHandler = () => {
     setChecked(!checked);
     if (!checked) {
@@ -28,18 +37,22 @@ const TaskItem = props => {
     <TouchableOpacity
       onPress={() => props.onClickItem({id: props.id, title: props.title})}>
       <View style={styles.listItem}>
+        <View style={{alignSelf: 'center'}}>
+          <CheckBox value={checked} onValueChange={stateChangeHandler} />
+        </View>
         <View
           style={{
             flex: 1,
             flexDirection: 'row',
-            alignContent: 'flex-start',
+            alignContent: 'center',
           }}>
           <Text style={textStyle()}>{props.title}</Text>
         </View>
-        <View style={{flexDirection: 'column', alignSelf: 'auto'}}>
-          <View style={{flexDirection: 'row'}}>
-            <CheckBox value={checked} onValueChange={stateChangeHandler} />
-          </View>
+        <View style={{alignSelf: 'center', paddingLeft: 5}}>
+          <Button
+            title={'Delete'}
+            onPress={() => props.onDeleteClick(props.id)}
+          />
         </View>
       </View>
     </TouchableOpacity>

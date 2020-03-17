@@ -1,20 +1,28 @@
 import React, {useState, useEffect} from 'react';
-import {StyleSheet, View, Button, FlatList} from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Button,
+  FlatList,
+  ActivityIndicator,
+} from 'react-native';
 import TaskItem from './TaskItem';
 import AsyncStorage from '@react-native-community/async-storage';
 
 function TaskList({navigation}) {
   const [tasks, setTasks] = useState([]);
   const [removedTasks, setRemovedTasks] = useState([]);
+  const [loadingBarVisible, setLoadingBarVisible] = useState(false);
 
   const token =
-    'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyZWRhIiwiZXhwIjoxNTg1MTk0MjUzfQ.uBVhch42IBOT4vHMp3GVKajE36iCaWjhyQfrtucU3hhrZtpXN26jbVF_WFPJsk67FAZS9dlYXRME54GMH-nrvw';
+    'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyZWRhIiwiZXhwIjoxNTg1MTk1MjA4fQ.LYaXID46QU1Cxcc6b9qoptTLZ0T4pDa7Qxu4mtZAmTv-BS-cLeXTrlr-fI2xudbZc66_iuGCWV5es-LlSb16pA';
   useEffect(() => {
     getTasksFromLocalStorage();
   }, []);
 
   useEffect(() => {
     storeTasksInLocalStorage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasks]);
 
   useEffect(() => {
@@ -23,6 +31,7 @@ function TaskList({navigation}) {
 
   useEffect(() => {
     storeDeleteTasksInLocalStorage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [removedTasks]);
 
   //Store data in local storage.
@@ -64,7 +73,6 @@ function TaskList({navigation}) {
       const value = await AsyncStorage.getItem('deleted_tasks');
       if (value !== null) {
         setRemovedTasks(JSON.parse(value));
-        console.log('deleted tasks from local storage: ' + JSON.parse(value));
       }
     } catch (e) {
       console.log(e);
@@ -82,7 +90,7 @@ function TaskList({navigation}) {
 
   async function getTasksFromApiAsync() {
     try {
-      const response = await fetch('http://192.168.1.7:8080/tasks', {
+      const response = await fetch('http://192.168.56.1:8080/tasks/get', {
         method: 'GET',
         headers: {
           Authorization: token,
@@ -93,28 +101,28 @@ function TaskList({navigation}) {
     } catch (e) {
       console.log(e);
     }
+    setLoadingBarVisible(false);
   }
 
   async function removeTasksFromApi() {
-    try {
-      const response = await fetch('http://192.168.1.7:8080/delete', {
-        method: 'POST',
-        headers: {
-          Authorization: token,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(removedTasks),
-      });
-    } catch (e) {
+    await fetch('http://192.168.56.1:8080/tasks/delete', {
+      method: 'POST',
+      headers: {
+        Authorization: token,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(removedTasks),
+    }).catch(e => {
       console.log(e);
-    }
+    });
   }
   async function postTasksToApiAsync() {
     try {
-      const response = await fetch('http://192.168.1.7:8080/tasks', {
+      const response = await fetch('http://192.168.56.1:8080/tasks/add', {
         method: 'POST',
         headers: {
+          Authorization: token,
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
@@ -123,8 +131,6 @@ function TaskList({navigation}) {
     } catch (e) {
       console.log(e);
     }
-    removeTasksFromApi();
-    getTasksFromApiAsync();
   }
 
   const addTaskHandler = newTask => {
@@ -165,7 +171,10 @@ function TaskList({navigation}) {
   };
 
   const syncButtonHandler = () => {
+    setLoadingBarVisible(true);
     postTasksToApiAsync();
+    setTimeout(removeTasksFromApi, 1000);
+    setTimeout(getTasksFromApiAsync, 2000);
   };
 
   const openAddScreenHandler = () => {
@@ -177,11 +186,13 @@ function TaskList({navigation}) {
 
   return (
     <View style={styles.screen}>
+      {loadingBarVisible ? (
+        <View style={[styles.container, styles.horizontal]}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      ) : null}
       <View style={styles.buttonStyle}>
         <Button title={'Add new task'} onPress={openAddScreenHandler} />
-      </View>
-      <View style={styles.buttonStyle}>
-        <Button title={'Sync data...'} onPress={syncButtonHandler} />
       </View>
       <FlatList
         data={tasks}
@@ -192,10 +203,14 @@ function TaskList({navigation}) {
             done={item.done}
             onClickItem={clickItemHandler}
             onStateChange={editTaskHandler}
+            onDeleteClick={deleteItemHandler}
           />
         )}
         keyExtractor={item => item.id}
       />
+      <View style={{padding: 10}}>
+        <Button title={'Sync data...'} onPress={syncButtonHandler} />
+      </View>
     </View>
   );
 }
@@ -203,6 +218,8 @@ export default TaskList;
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
+    flexDirection: 'column',
     padding: 10,
   },
   buttonStyle: {
