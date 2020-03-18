@@ -15,7 +15,8 @@ function TaskList({navigation}) {
   const [loadingBarVisible, setLoadingBarVisible] = useState(false);
 
   const token =
-    'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyZWRhIiwiZXhwIjoxNTg1MTk1MjA4fQ.LYaXID46QU1Cxcc6b9qoptTLZ0T4pDa7Qxu4mtZAmTv-BS-cLeXTrlr-fI2xudbZc66_iuGCWV5es-LlSb16pA';
+    'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyZWRhdGF3ZmlrIiwiZXhwIjoxNTg1MzM5OTAzfQ.LUDZY-nQnA7OkqMsT0XGULAjOkcsuH7SO5i0Hcgv7pQkdSoFSwvBkY5UqIIVJL45OS0qdtOIInSh9rWIyQj4QA';
+  const uri = 'http://todo-env-1.eba-e7hpambk.us-east-1.elasticbeanstalk.com';
   useEffect(() => {
     getTasksFromLocalStorage();
   }, []);
@@ -90,12 +91,15 @@ function TaskList({navigation}) {
 
   async function getTasksFromApiAsync() {
     try {
-      const response = await fetch('http://192.168.56.1:8080/tasks/get', {
-        method: 'GET',
-        headers: {
-          Authorization: token,
+      const response = await fetch(
+        'http://todo-env-1.eba-e7hpambk.us-east-1.elasticbeanstalk.com/tasks/get',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: token,
+          },
         },
-      });
+      );
       const tasksResponse = await response.json();
       setTasks(tasksResponse);
     } catch (e) {
@@ -105,29 +109,36 @@ function TaskList({navigation}) {
   }
 
   async function removeTasksFromApi() {
-    await fetch('http://192.168.56.1:8080/tasks/delete', {
-      method: 'POST',
-      headers: {
-        Authorization: token,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(removedTasks),
-    }).catch(e => {
-      console.log(e);
-    });
-  }
-  async function postTasksToApiAsync() {
-    try {
-      const response = await fetch('http://192.168.56.1:8080/tasks/add', {
+    await fetch(
+      'http://todo-env-1.eba-e7hpambk.us-east-1.elasticbeanstalk.com/tasks/delete',
+      {
         method: 'POST',
         headers: {
           Authorization: token,
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(tasks),
-      });
+        body: JSON.stringify(removedTasks),
+      },
+    ).catch(e => {
+      console.log(e);
+    });
+  }
+  async function postTasksToApiAsync() {
+    try {
+      const response = await fetch(
+        'http://todo-env-1.eba-e7hpambk.us-east-1.elasticbeanstalk.com/tasks/add',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: token,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(tasks),
+        },
+      );
+      console.log(response);
     } catch (e) {
       console.log(e);
     }
