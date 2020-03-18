@@ -115,18 +115,22 @@ function TaskList({navigation}) {
   }
 
   async function removeTasksFromApi() {
-    await fetch(uri + '/tasks/delete', {
-      method: 'POST',
-      headers: {
-        Authorization: token,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(removedTasks),
-    }).catch(e => {
+    try {
+      await fetch(uri + '/tasks/delete', {
+        method: 'POST',
+        headers: {
+          Authorization: token,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(removedTasks),
+      });
+      setRemovedTasks([]);
+    } catch (e) {
       console.log(e);
-    });
+    }
   }
+
   async function postTasksToApiAsync() {
     try {
       const response = await fetch(uri + '/tasks/add', {
