@@ -5,20 +5,27 @@ import {
   Button,
   FlatList,
   ActivityIndicator,
+  Text,
 } from 'react-native';
 import TaskItem from './TaskItem';
 import AsyncStorage from '@react-native-community/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 
 function TaskList({navigation}) {
   const [tasks, setTasks] = useState([]);
   const [removedTasks, setRemovedTasks] = useState([]);
   const [loadingBarVisible, setLoadingBarVisible] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
 
   const token =
     'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyZWRhdGF3ZmlrIiwiZXhwIjoxNTg1MzM5OTAzfQ.LUDZY-nQnA7OkqMsT0XGULAjOkcsuH7SO5i0Hcgv7pQkdSoFSwvBkY5UqIIVJL45OS0qdtOIInSh9rWIyQj4QA';
   const uri = 'http://todo-env-1.eba-e7hpambk.us-east-1.elasticbeanstalk.com';
+
   useEffect(() => {
     getTasksFromLocalStorage();
+    getDeletedTasksFromLocalStorage();
+    checkConnection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -27,13 +34,15 @@ function TaskList({navigation}) {
   }, [tasks]);
 
   useEffect(() => {
-    getDeletedTasksFromLocalStorage();
-  }, []);
-
-  useEffect(() => {
     storeDeleteTasksInLocalStorage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [removedTasks]);
+
+  const checkConnection = () => {
+    NetInfo.fetch().then(state => {
+      setIsOnline(state.isConnected);
+    });
+  };
 
   //Store data in local storage.
   const storeTasksInLocalStorage = async () => {
@@ -51,6 +60,7 @@ function TaskList({navigation}) {
       const value = await AsyncStorage.getItem('tasks_key');
       if (value !== null) {
         setTasks(JSON.parse(value));
+        console.log(tasks);
       }
     } catch (e) {
       console.log(e);
@@ -62,7 +72,6 @@ function TaskList({navigation}) {
     try {
       removeItemValue('deleted_tasks');
       await AsyncStorage.setItem('deleted_tasks', JSON.stringify(removedTasks));
-      //getDeletedTasksFromLocalStorage();
     } catch (e) {
       console.log(e);
     }
@@ -91,15 +100,12 @@ function TaskList({navigation}) {
 
   async function getTasksFromApiAsync() {
     try {
-      const response = await fetch(
-        'http://todo-env-1.eba-e7hpambk.us-east-1.elasticbeanstalk.com/tasks/get',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: token,
-          },
+      const response = await fetch(uri + '/tasks/get', {
+        method: 'GET',
+        headers: {
+          Authorization: token,
         },
-      );
+      });
       const tasksResponse = await response.json();
       setTasks(tasksResponse);
     } catch (e) {
@@ -109,36 +115,29 @@ function TaskList({navigation}) {
   }
 
   async function removeTasksFromApi() {
-    await fetch(
-      'http://todo-env-1.eba-e7hpambk.us-east-1.elasticbeanstalk.com/tasks/delete',
-      {
+    await fetch(uri + '/tasks/delete', {
+      method: 'POST',
+      headers: {
+        Authorization: token,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(removedTasks),
+    }).catch(e => {
+      console.log(e);
+    });
+  }
+  async function postTasksToApiAsync() {
+    try {
+      const response = await fetch(uri + '/tasks/add', {
         method: 'POST',
         headers: {
           Authorization: token,
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(removedTasks),
-      },
-    ).catch(e => {
-      console.log(e);
-    });
-  }
-  async function postTasksToApiAsync() {
-    try {
-      const response = await fetch(
-        'http://todo-env-1.eba-e7hpambk.us-east-1.elasticbeanstalk.com/tasks/add',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: token,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(tasks),
-        },
-      );
-      console.log(response);
+        body: JSON.stringify(tasks),
+      });
     } catch (e) {
       console.log(e);
     }
@@ -182,10 +181,13 @@ function TaskList({navigation}) {
   };
 
   const syncButtonHandler = () => {
-    setLoadingBarVisible(true);
-    postTasksToApiAsync();
-    setTimeout(removeTasksFromApi, 1000);
-    setTimeout(getTasksFromApiAsync, 2000);
+    checkConnection();
+    if (isOnline) {
+      setLoadingBarVisible(true);
+      postTasksToApiAsync();
+      setTimeout(removeTasksFromApi, 1000);
+      setTimeout(getTasksFromApiAsync, 2000);
+    }
   };
 
   const openAddScreenHandler = () => {
@@ -197,6 +199,11 @@ function TaskList({navigation}) {
 
   return (
     <View style={styles.screen}>
+      {!isOnline ? (
+        <View style={{backgroundColor: 'yellow', alignContent: 'center'}}>
+          <Text style={{alignSelf: 'center'}}> 'offline'</Text>
+        </View>
+      ) : null}
       {loadingBarVisible ? (
         <View style={[styles.container, styles.horizontal]}>
           <ActivityIndicator size="large" color="#0000ff" />
@@ -235,5 +242,12 @@ const styles = StyleSheet.create({
   },
   buttonStyle: {
     padding: 10,
+  },
+  noConnected: {
+    marginBottom: 10,
+    textDecorationLine: 'underline',
+    color: 'blue',
+    fontWeight: 'bold',
+    backgroundColor: 'yellow',
   },
 });
