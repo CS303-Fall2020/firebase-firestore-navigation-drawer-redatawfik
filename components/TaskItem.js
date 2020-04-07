@@ -2,10 +2,9 @@ import React, {useState} from 'react';
 import {
   View,
   Text,
-  ActivityIndicator,
-  Button,
   TouchableOpacity,
   StyleSheet,
+  Image,
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 
@@ -21,8 +20,6 @@ const TaskItem = props => {
       fontWeight: 'normal',
     };
   };
-
-  const onDeleteClick = () => {};
 
   const stateChangeHandler = () => {
     setChecked(!checked);
@@ -48,12 +45,12 @@ const TaskItem = props => {
           }}>
           <Text style={textStyle()}>{props.title}</Text>
         </View>
-        <View style={{alignSelf: 'center', paddingLeft: 5}}>
-          <Button
-            title={'Delete'}
-            onPress={() => props.onDeleteClick(props.id)}
+        <TouchableOpacity onPress={() => props.onDeleteClick(props.id)}>
+          <Image
+            style={{marginRight: 10, width: 30, height: 30}}
+            source={require('../bin.png')}
           />
-        </View>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );

@@ -2,28 +2,34 @@ import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   View,
-  Button,
   FlatList,
   ActivityIndicator,
   Text,
 } from 'react-native';
+import {Container, Content, Button} from 'native-base';
+
 import TaskItem from './TaskItem';
 import AsyncStorage from '@react-native-community/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import {URI} from '../constants';
 
-function TaskList({navigation}) {
+const TaskList = props => {
   const [tasks, setTasks] = useState([]);
   const [removedTasks, setRemovedTasks] = useState([]);
   const [loadingBarVisible, setLoadingBarVisible] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
-  const token =
-    'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyZWRhdGF3ZmlrIiwiZXhwIjoxNTg1MzM5OTAzfQ.LUDZY-nQnA7OkqMsT0XGULAjOkcsuH7SO5i0Hcgv7pQkdSoFSwvBkY5UqIIVJL45OS0qdtOIInSh9rWIyQj4QA';
-  const uri = 'http://todo-env-1.eba-e7hpambk.us-east-1.elasticbeanstalk.com';
+  const {token} = props;
+  const {user} = props;
+  console.log('Tasklist: user in tasklist is', user);
 
   useEffect(() => {
     getTasksFromLocalStorage();
     getDeletedTasksFromLocalStorage();
+    // setTimeout(postTasksToApiAsync, 1000);
+    // setTimeout(removeTasksFromApi, 2000);
+    // setTimeout(getTasksFromApiAsync, 3000);
+
     checkConnection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -47,8 +53,9 @@ function TaskList({navigation}) {
   //Store data in local storage.
   const storeTasksInLocalStorage = async () => {
     try {
-      removeItemValue('tasks_key');
-      await AsyncStorage.setItem('tasks_key', JSON.stringify(tasks));
+      removeItemValue(user);
+      await AsyncStorage.setItem(user, JSON.stringify(tasks));
+      console.log('TaskList: tasks after store in local storage', tasks);
     } catch (e) {
       console.log(e);
     }
@@ -57,10 +64,10 @@ function TaskList({navigation}) {
   //get data from local storage.
   const getTasksFromLocalStorage = async () => {
     try {
-      const value = await AsyncStorage.getItem('tasks_key');
+      const value = await AsyncStorage.getItem(user);
       if (value !== null) {
         setTasks(JSON.parse(value));
-        console.log(tasks);
+        console.log('tasks from loca storage is', value);
       }
     } catch (e) {
       console.log(e);
@@ -99,8 +106,9 @@ function TaskList({navigation}) {
   };
 
   async function getTasksFromApiAsync() {
+    setLoadingBarVisible(true);
     try {
-      const response = await fetch(uri + '/tasks/get', {
+      const response = await fetch(URI + '/tasks/get', {
         method: 'GET',
         headers: {
           Authorization: token,
@@ -115,8 +123,9 @@ function TaskList({navigation}) {
   }
 
   async function removeTasksFromApi() {
+    setLoadingBarVisible(true);
     try {
-      await fetch(uri + '/tasks/delete', {
+      await fetch(URI + '/tasks/delete', {
         method: 'POST',
         headers: {
           Authorization: token,
@@ -132,8 +141,9 @@ function TaskList({navigation}) {
   }
 
   async function postTasksToApiAsync() {
+    setLoadingBarVisible(true);
     try {
-      const response = await fetch(uri + '/tasks/add', {
+      const response = await fetch(URI + '/tasks/add', {
         method: 'POST',
         headers: {
           Authorization: token,
@@ -175,7 +185,7 @@ function TaskList({navigation}) {
   };
 
   const clickItemHandler = tempTask => {
-    navigation.navigate('TaskDetails', {
+    props.navigation.navigate('TaskDetails', {
       addButtonPressed: editTaskHandler,
       deleteButtonPressed: deleteItemHandler,
       isDeleteButtonVisible: true,
@@ -184,7 +194,7 @@ function TaskList({navigation}) {
     });
   };
 
-  const syncButtonHandler = () => {
+  const syncData = () => {
     checkConnection();
     if (isOnline) {
       setLoadingBarVisible(true);
@@ -195,47 +205,56 @@ function TaskList({navigation}) {
   };
 
   const openAddScreenHandler = () => {
-    navigation.navigate('TaskDetails', {
+    props.navigation.navigate('TaskDetails', {
       addButtonPressed: addTaskHandler,
       id: -1,
     });
   };
 
   return (
-    <View style={styles.screen}>
-      {!isOnline ? (
-        <View style={{backgroundColor: 'yellow', alignContent: 'center'}}>
-          <Text style={{alignSelf: 'center'}}> 'offline'</Text>
-        </View>
-      ) : null}
-      {loadingBarVisible ? (
-        <View style={[styles.container, styles.horizontal]}>
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
-      ) : null}
-      <View style={styles.buttonStyle}>
-        <Button title={'Add new task'} onPress={openAddScreenHandler} />
-      </View>
-      <FlatList
-        data={tasks}
-        renderItem={({item}) => (
-          <TaskItem
-            id={item.id}
-            title={item.title}
-            done={item.done}
-            onClickItem={clickItemHandler}
-            onStateChange={editTaskHandler}
-            onDeleteClick={deleteItemHandler}
-          />
-        )}
-        keyExtractor={item => item.id}
-      />
-      <View style={{padding: 10}}>
-        <Button title={'Sync data...'} onPress={syncButtonHandler} />
-      </View>
-    </View>
+    <Container>
+      <Content padder>
+        {!isOnline ? (
+          <View style={{backgroundColor: 'yellow', alignContent: 'center'}}>
+            <Text style={{alignSelf: 'center'}}> 'offline'</Text>
+          </View>
+        ) : null}
+        {loadingBarVisible ? (
+          <View style={[styles.container, styles.horizontal]}>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
+        ) : null}
+        <Button
+          style={{margin: 10}}
+          full
+          rounded
+          primary
+          onPress={openAddScreenHandler}>
+          <Text style={{color: 'white'}}>Add new task</Text>
+        </Button>
+        <Button style={{margin: 10}} full rounded light onPress={syncData}>
+          <Text style={{color: 'white'}}>Sync data...</Text>
+        </Button>
+
+        <FlatList
+          data={tasks}
+          renderItem={({item}) => (
+            <TaskItem
+              id={item.id}
+              title={item.title}
+              done={item.done}
+              onClickItem={clickItemHandler}
+              onStateChange={editTaskHandler}
+              onDeleteClick={deleteItemHandler}
+            />
+          )}
+          keyExtractor={item => item.id}
+        />
+      </Content>
+    </Container>
   );
-}
+};
+
 export default TaskList;
 
 const styles = StyleSheet.create({
@@ -243,6 +262,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     padding: 10,
+    justifyContent: 'flex-end',
   },
   buttonStyle: {
     padding: 10,

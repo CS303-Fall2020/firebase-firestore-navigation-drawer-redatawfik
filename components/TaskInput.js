@@ -1,78 +1,79 @@
 import React, {useState} from 'react';
-import {View, StyleSheet, Button, TextInput, Modal} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
+import {Input, Item, Label, Button} from 'native-base';
 
-const TaskInput = props => {
-  const [enteredTaskTitle, setEnteredTaskTitle] = useState(
-    props.navigation.getParam('title'),
-  );
-  const [textInputBorderColor, setTextInputBorderColor] = useState('black');
+const TaskInput = ({navigation, route}) => {
+  const [enteredTaskTitle, setEnteredTaskTitle] = useState(route.params.title);
   const [deleteButtonVisible, setDeleteButtonVisible] = useState(
-    props.navigation.getParam('isDeleteButtonVisible'),
+    route.params.isDeleteButtonVisible,
   );
 
   const addButtonHandler = () => {
-    if (enteredTaskTitle) {
-      const addHandler = props.navigation.getParam('addButtonPressed');
+    const addHandler = route.params.addButtonPressed;
 
-      if (props.navigation.getParam('id') === -1) {
-        addHandler({
-          id: Math.floor(Math.random() * 10000) + 1,
-          title: enteredTaskTitle,
-        });
-      } else {
-        addHandler({
-          id: props.navigation.getParam('id'),
-          title: enteredTaskTitle,
-        });
-      }
-
-      closeScreen();
+    if (route.params.id === -1) {
+      addHandler({
+        id: Math.floor(Math.random() * 10000) + 1,
+        title: enteredTaskTitle,
+      });
     } else {
-      setTextInputBorderColor('red');
+      addHandler({
+        id: route.params.id,
+        title: enteredTaskTitle,
+      });
     }
+
+    closeScreen();
   };
 
   const closeScreen = () => {
-    props.navigation.goBack();
+    navigation.goBack();
   };
 
   const deleteTask = () => {
-    const deleteFunc = props.navigation.getParam('deleteButtonPressed');
-    deleteFunc(props.navigation.getParam('id'));
-    props.navigation.goBack();
-  };
-
-  const inputStyle = () => {
-    return {
-      borderColor: textInputBorderColor,
-      width: 300,
-      borderWidth: 1,
-      padding: 10,
-      marginBottom: 10,
-    };
+    const deleteFunc = route.params.deleteButtonPressed;
+    deleteFunc(route.params.id);
+    navigation.goBack();
   };
 
   return (
     <View style={styles.containerStyle}>
-      <View>
-        <TextInput
-          multiline
+      <Item floatingLabel>
+        <Label>Enter task title...</Label>
+        <Input
           value={enteredTaskTitle}
-          style={inputStyle()}
-          placeholder={'Add task title...'}
+          autocorrect={false}
+          autoCapitalize="none"
           onChangeText={text => setEnteredTaskTitle(text)}
         />
-      </View>
-      <View style={styles.addButtonStyle}>
-        <Button title={'Save'} onPress={addButtonHandler} />
-      </View>
-      <View style={styles.addButtonStyle}>
-        <Button title={'Cancel'} onPress={closeScreen} />
-      </View>
+      </Item>
+      <Button
+        style={{marginTop: 10}}
+        full
+        rounded
+        primary
+        onPress={addButtonHandler}>
+        <Text style={{color: 'white'}}>Save</Text>
+      </Button>
+
+      <Button
+        style={{marginTop: 10}}
+        full
+        rounded
+        warning
+        onPress={closeScreen}>
+        <Text style={{color: 'white'}}>Cancel</Text>
+      </Button>
+
       {deleteButtonVisible ? (
-        <View style={styles.addButtonStyle}>
-          <Button title={'Delete'} onPress={deleteTask} />
-        </View>
+        <Button
+          style={{marginTop: 10}}
+          full
+          rounded
+          danger
+          onPress={deleteTask}>
+          <Text style={{color: 'white'}}>Delete</Text>
+        </Button>
       ) : null}
     </View>
   );
